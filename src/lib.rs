@@ -1,3 +1,3 @@
-pub mod handler;
 pub mod models;
 pub mod services;
+pub mod handler;
