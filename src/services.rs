@@ -32,7 +32,7 @@ pub fn get_logged_in_role()->Result<Option<Role>, Box<dyn Error>>{
     match role.as_str(){
         "Administrator"=>Ok(Some(Role::Admin)),
         "User"=>Ok(Some(Role::User)),
-        _=>Ok((None)),
+        _=>Ok(None),
     }
 }
 
