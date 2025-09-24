@@ -48,10 +48,10 @@ impl UserRepository {
         username: &str,
         password: &str,
     ) -> Result<Option<User>, Box<dyn std::error::Error>> {
-        if let Some(user) = Self::get_user_by_username(username).await? {
-            if crate::auth::verify_password(password, &user.password_hash)? {
-                return Ok(Some(user));
-            }
+        if let Some(user) = Self::get_user_by_username(username).await?
+            && crate::auth::verify_password(password, &user.password_hash)?
+        {
+            return Ok(Some(user));
         }
         Ok(None)
     }
