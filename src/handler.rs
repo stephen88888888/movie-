@@ -1,35 +1,38 @@
 use std::error::Error;
+use crate::services::AuthService;
 
-use crate::services::{get_users, login_success, logout};
+pub async fn handle_login(username: &str) -> Result<(), Box<dyn Error>> {
+    println!("Username: {}", username);
+    
+    println!("Please enter the password:");
+    let password = rpassword::read_password()?;
 
-pub fn handle_login(username: &str) -> Result<(), Box<dyn Error>> {
-    println!("Username: {username}");
-    if let Some(user) = get_users()
-        .iter()
-        .find(|u| u.username.eq_ignore_ascii_case(username))
-    {
-        println!("Please enter the password:");
-        match rpassword::read_password() {
-            Ok(password) => {
-                if user.password == password {
-                    //println!("Password: {password}");
-                    login_success(&user.role)?;
-                    println!("log in successfully");
-                } else {
-                    println!("Incorrect password.");
-                }
-            }
-            Err(_) => {
-                println!("not read the password");
+    match AuthService::login(username, &password) {
+        Ok(Some(_session_id)) => {
+            println!("Login successful!");
+            if let Some(current_user) = AuthService::get_current_user() {
+                println!("Current user: {}", current_user);
             }
         }
-    } else {
-        println!("User not found.");
+        Ok(None) => {
+            println!("Invalid username or password.");
+        }
+        Err(e) => {
+            println!("Login error: {}", e);
+        }
     }
+
     Ok(())
 }
 
-pub fn handle_logout() {
-    logout();
-    println!("Logged out successfully.")
+pub async fn handle_logout() -> Result<(), Box<dyn Error>> {
+    match AuthService::logout() {
+        Ok(()) => {
+            println!("Logout successful!");
+        }
+        Err(e) => {
+            println!("Logout error: {}", e);
+        }
+    }
+    Ok(())
 }

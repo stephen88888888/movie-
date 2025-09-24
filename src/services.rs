@@ -1,51 +1,45 @@
-use std::{error::Error, fs};
+use crate::auth::SessionManager;
+use crate::database::models::UserRepository;
+use std::sync::Mutex;
 
-use crate::models::{Role, User};
-
-pub fn get_users() -> Vec<User> {
-    vec![
-        User {
-            username: "Admin".to_string(),
-            password: "admin".to_string(),
-            role: Role::Admin,
-        },
-        User {
-            username: "Dave".to_string(),
-            password: "Mustaine".to_string(),
-            role: Role::User,
-        },
-        User {
-            username: "Nick".to_string(),
-            password: "Carter".to_string(),
-            role: Role::User,
-        },
-    ]
+lazy_static::lazy_static! {
+    static ref SESSION_MANAGER: Mutex<SessionManager> = 
+        Mutex::new(SessionManager::new("session.json").unwrap()); // 简化路径
 }
 
-pub fn login_success(role: &Role) -> Result<(), Box<dyn Error>> {
-    fs::write(".session", role.to_string())?;
-    Ok(())
-}
+pub struct AuthService;
 
-pub fn get_logged_in_role() -> Result<Option<Role>, Box<dyn Error>> {
-    let role = fs::read_to_string(".session")?;
-    match role.as_str() {
-        "Administrator" => Ok(Some(Role::Admin)),
-        "User" => Ok(Some(Role::User)),
-        _ => Ok(None),
+impl AuthService {
+    pub fn login(username: &str, password: &str) -> Result<Option<String>, Box<dyn std::error::Error>> {
+        let rt = tokio::runtime::Runtime::new()?;
+        
+        let result = rt.block_on(async {
+            if let Some(user) = UserRepository::verify_user(username, password).await? {
+                let mut session_manager = SESSION_MANAGER.lock().unwrap();
+                let session_id = session_manager.create_session(
+                    user.username,
+                    user.role.to_string(),
+                    3600, // 1小时超时
+                )?;
+                Ok(Some(session_id))
+            } else {
+                Ok(None)
+            }
+        });
+        
+        result
     }
-}
 
-pub fn logout() {
-    fs::remove_file(".session").unwrap_or_else(|error| match error.kind() {
-        std::io::ErrorKind::NotFound => {
-            println!("用户未登录（会话文件不存在）");
+    pub fn logout() -> Result<(), Box<dyn std::error::Error>> {
+        let mut session_manager = SESSION_MANAGER.lock().unwrap();
+        if let Some(session_id) = session_manager.get_current_session_id() {
+            session_manager.delete_session(&session_id)?;
         }
-        std::io::ErrorKind::PermissionDenied => {
-            println!("权限不足，无法删除会话文件");
-        }
-        _ => {
-            println!("注销失败: {}", error);
-        }
-    });
+        Ok(())
+    }
+
+    pub fn get_current_user() -> Option<String> {
+        let session_manager = SESSION_MANAGER.lock().unwrap();
+        session_manager.get_current_user()
+    }
 }
