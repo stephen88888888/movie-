@@ -4,6 +4,7 @@ use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::{Error, SqlitePool};
 use std::sync::Mutex;
 use std::time::Duration;
+use bcrypt::{hash, verify, DEFAULT_COST};
 
 static POOL: Mutex<Option<SqlitePool>> = Mutex::new(None);
 
@@ -57,18 +58,25 @@ async fn init_database_tables(pool: &SqlitePool) -> Result<(), Error> {
         .fetch_one(pool)
         .await?;
 
-    if count.0 == 0 {
-        println!("Inserting sample data...");
-        // 插入示例用户（密码是 "password" 的bcrypt哈希）
-        sqlx::query(
-            "INSERT OR IGNORE INTO users (username, password_hash, role) VALUES 
-            ('admin', '$2b$12$LQv3c1yqBWVH.0x6pQwZTuYQ7qBqQY8Y8Y8Y8Y8Y8Y8Y8Y8Y8Y8Y8', 'admin'),
-            ('user1', '$2b$12$LQv3c1yqBWVH.0x6pQwZTuYQ7qBqQY8Y8Y8Y8Y8Y8Y8Y8Y8Y8Y8', 'user')",
-        )
-        .execute(pool)
-        .await?;
-        println!("Sample data initialized");
-    } else {
+        if count.0 == 0 {
+            println!("Inserting sample data...");
+            
+            // 使用 bcrypt 库动态生成正确的哈希
+            let password_hash = bcrypt::hash("password", 12)
+                .expect("Failed to hash password");
+            
+            sqlx::query(
+                "INSERT OR IGNORE INTO users (username, password_hash, role) VALUES 
+                ('admin', ?, 'admin'),
+                ('user1', ?, 'user')",
+            )
+            .bind(&password_hash)
+            .bind(&password_hash)
+            .execute(pool)
+            .await?;
+            
+            println!("Sample data initialized");
+        }else {
         println!("Database already contains {} users", count.0);
     }
 

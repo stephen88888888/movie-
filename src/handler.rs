@@ -11,7 +11,8 @@ pub async fn handle_login(username: &str) -> Result<(), Box<dyn Error>> {
     .await
     .expect("Task failed");
 
-    match AuthService::login(username, &password) {
+    // 现在可以添加 .await 了
+    match AuthService::login(username, &password).await {
         Ok(Some(_session_id)) => {
             println!("Login successful!");
             if let Some(current_user) = AuthService::get_current_user() {
@@ -30,7 +31,7 @@ pub async fn handle_login(username: &str) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn handle_logout() -> Result<(), Box<dyn Error>> {
-    match AuthService::logout() {
+    match AuthService::logout().await {
         Ok(()) => {
             println!("Logout successful!");
         }
