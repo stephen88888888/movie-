@@ -5,7 +5,11 @@ pub async fn handle_login(username: &str) -> Result<(), Box<dyn Error>> {
     println!("Username: {}", username);
 
     println!("Please enter the password:");
-    let password = rpassword::read_password()?;
+    let password = tokio::task::spawn_blocking(|| {
+        rpassword::read_password().expect("Failed to read password")
+    })
+    .await
+    .expect("Task failed");
 
     match AuthService::login(username, &password) {
         Ok(Some(_session_id)) => {
