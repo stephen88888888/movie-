@@ -10,12 +10,12 @@ pub struct AppConfig {
 
 impl Default for AppConfig {
     fn default() -> Self {
-        // 使用相对路径，但确保文件在当前目录创建
-        let db_path = "movie.db";
+        // 修改这一行 - 添加 file: 前缀和模式参数
+        let db_path = "file:movie.db?mode=rwc";
 
         Self {
             database_url: format!("sqlite:{}", db_path),
-            session_timeout: 3600, // 1小时
+            session_timeout: 3600,
         }
     }
 }
