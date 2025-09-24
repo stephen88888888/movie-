@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
 use sqlx::FromRow;
+use std::fmt::Display;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct User {

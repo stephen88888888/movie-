@@ -1,9 +1,9 @@
-use std::error::Error;
 use crate::services::AuthService;
+use std::error::Error;
 
 pub async fn handle_login(username: &str) -> Result<(), Box<dyn Error>> {
     println!("Username: {}", username);
-    
+
     println!("Please enter the password:");
     let password = rpassword::read_password()?;
 

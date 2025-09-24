@@ -3,17 +3,20 @@ use crate::database::models::UserRepository;
 use std::sync::Mutex;
 
 lazy_static::lazy_static! {
-    static ref SESSION_MANAGER: Mutex<SessionManager> = 
+    static ref SESSION_MANAGER: Mutex<SessionManager> =
         Mutex::new(SessionManager::new("session.json").unwrap()); // 简化路径
 }
 
 pub struct AuthService;
 
 impl AuthService {
-    pub fn login(username: &str, password: &str) -> Result<Option<String>, Box<dyn std::error::Error>> {
+    pub fn login(
+        username: &str,
+        password: &str,
+    ) -> Result<Option<String>, Box<dyn std::error::Error>> {
         let rt = tokio::runtime::Runtime::new()?;
-        
-        let result = rt.block_on(async {
+
+        rt.block_on(async {
             if let Some(user) = UserRepository::verify_user(username, password).await? {
                 let mut session_manager = SESSION_MANAGER.lock().unwrap();
                 let session_id = session_manager.create_session(
@@ -25,9 +28,7 @@ impl AuthService {
             } else {
                 Ok(None)
             }
-        });
-        
-        result
+        })
     }
 
     pub fn logout() -> Result<(), Box<dyn std::error::Error>> {
