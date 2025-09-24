@@ -4,6 +4,7 @@ use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::{Error, SqlitePool};
 use std::sync::Mutex;
 use std::time::Duration;
+#[allow(unused_imports)]
 use bcrypt::{hash, verify, DEFAULT_COST};
 
 static POOL: Mutex<Option<SqlitePool>> = Mutex::new(None);
@@ -61,17 +62,17 @@ async fn init_database_tables(pool: &SqlitePool) -> Result<(), Error> {
         if count.0 == 0 {
             println!("Inserting sample data...");
             
-            // 使用 bcrypt 库动态生成正确的哈希
-            let password_hash = bcrypt::hash("password", 12)
-                .expect("Failed to hash password");
+            // 为不同用户设置不同的强密码
+            let admin_password_hash = hash("admin123", 12).expect("Failed to hash password");
+            let user1_password_hash = hash("user123", 12).expect("Failed to hash password");
             
             sqlx::query(
                 "INSERT OR IGNORE INTO users (username, password_hash, role) VALUES 
                 ('admin', ?, 'admin'),
                 ('user1', ?, 'user')",
             )
-            .bind(&password_hash)
-            .bind(&password_hash)
+            .bind(&admin_password_hash)
+            .bind(&user1_password_hash)
             .execute(pool)
             .await?;
             
