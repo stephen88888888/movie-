@@ -1,14 +1,27 @@
+# 定义 Rust 包（crate）的元数据
 [package]
+# 包的名称
 name = "movie"
+# 包的版本号，遵循语义化版本规范
 version = "0.1.0"
+# 使用的 Rust 版本（Edition），2024 是最新标准
 edition = "2024"
 
+# 声明项目所依赖的外部 crate
 [dependencies]
+# 命令行参数解析库，支持派生宏（derive）来简化结构体定义
 clap = { version = "4.0", features = ["derive"] }
+# 异步运行时库，提供异步 I/O、定时器等功能，此处启用所有功能（full）
 tokio = { version = "1.0", features = ["full"] }
+# 异步 SQL 查询构建器与数据库驱动，支持 tokio 运行时和 SQLite 数据库
 sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
+# 用于密码哈希的 bcrypt 算法库
 bcrypt = "0.15"
+# 用于安全读取密码（不显示输入）的库
 rpassword = "7.0.0"
+# 序列化/反序列化框架，支持派生宏来自动实现 Serde 的 trait
 serde = { version = "1.0", features = ["derive"] }
+# 日期和时间处理库，支持与 Serde 集成进行序列化
 chrono = { version = "0.4", features = ["serde"] }
+# 用于在全局定义延迟初始化（懒加载）的静态变量
 lazy_static = "1.4"
