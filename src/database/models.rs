@@ -59,12 +59,13 @@ impl UserRepository {
         password: &str, // 密码
     ) -> Result<Option<User>, Box<dyn std::error::Error>> {
         // 尝试获取用户并验证密码
-        if let Some(user) = Self::get_user_by_username(username).await?
+        let user = Self::get_user_by_username(username).await?;
+        if let Some(user) = user {
             // 使用密码验证函数检查密码是否匹配
-            && crate::auth::verify_password(password, &user.password_hash)?
-        {
-            // 验证成功返回用户信息
-            return Ok(Some(user));
+            if crate::auth::verify_password(password, &user.password_hash)? {
+                // 验证成功返回用户信息
+                return Ok(Some(user));
+            }
         }
         // 验证失败返回None
         Ok(None)
